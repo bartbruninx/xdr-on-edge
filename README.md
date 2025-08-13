@@ -50,7 +50,18 @@ A cross-browser extension that brings Microsoft Security capabilities to your br
 
 ## 🚀 Quick Start
 
-### 1. Setup Repository
+> **💡 Tip**: You can download pre-built extensions from [Releases](https://github.com/bartbruninx/xdr-on-edge/releases) instead of building from source!
+
+### Option A: Download Release (Recommended)
+1. Visit [GitHub Releases](https://github.com/bartbruninx/xdr-on-edge/releases)
+2. Download the appropriate browser package:
+   - `xdr-on-edge-chrome-vX.X.X.zip` for Chrome
+   - `xdr-on-edge-firefox-vX.X.X.zip` for Firefox  
+   - `xdr-on-edge-edge-vX.X.X.zip` for Edge
+3. Extract the zip file
+4. Skip to **Install in Browser** section below
+
+### Option B: Build from Source
 ```bash
 git clone <repository-url>
 cd xdr-on-edge
@@ -83,7 +94,7 @@ Copy the **Application (client) ID** and **Directory (tenant) ID** from the Over
 
 ### 3. Build & Install
 
-#### Build Extension
+#### Build Extension (Skip if using downloaded release)
 ```bash
 npm run build:all    # All browsers
 # OR individually:
@@ -93,9 +104,9 @@ npm run build:edge
 ```
 
 #### Install in Browser
-- **Chrome**: `chrome://extensions/` → Enable Developer mode → Load unpacked → Select `dist-chrome/`
-- **Firefox**: `about:debugging` → This Firefox → Load Temporary Add-on → Select `dist-firefox/manifest.json`
-- **Edge**: `edge://extensions/` → Enable Developer mode → Load unpacked → Select `dist-edge/`
+- **Chrome**: `chrome://extensions/` → Enable Developer mode → Load unpacked → Select `dist-chrome/` (or extracted release folder)
+- **Firefox**: `about:debugging` → This Firefox → Load Temporary Add-on → Select `dist-firefox/manifest.json` (or extracted release folder)
+- **Edge**: `edge://extensions/` → Enable Developer mode → Load unpacked → Select `dist-edge/` (or extracted release folder)
 
 ### 4. Configure Extension
 1. Click extension icon in browser toolbar
