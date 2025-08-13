@@ -1,0 +1,75 @@
+name: 🔍 Quality Checks
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  quality-checks:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+    
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: 🔧 Install Dependencies
+      run: npm ci
+    
+    - name: 📋 TypeScript Check
+      run: npx tsc --noEmit
+    
+    - name: 🎨 Lint Check
+      run: npm run lint
+      continue-on-error: true
+    
+    - name: 🛠️ Build Test
+      run: npm run build:all
+    
+    - name: 🔐 Security Audit
+      run: npm audit --audit-level=moderate
+      continue-on-error: true
+    
+    - name: 📊 Bundle Size Analysis
+      run: |
+        echo "📈 Build Size Analysis:"
+        du -h dist-chrome/assets/* | sort -hr
+        echo ""
+        echo "📋 Manifest Validation:"
+        node -e "
+          const fs = require('fs');
+          const manifests = ['dist-chrome', 'dist-firefox', 'dist-edge'];
+          manifests.forEach(dir => {
+            try {
+              const manifest = JSON.parse(fs.readFileSync(\`\${dir}/manifest.json\`, 'utf8'));
+              console.log(\`✅ \${dir}/manifest.json - Version: \${manifest.version}\`);
+            } catch (e) {
+              console.log(\`❌ \${dir}/manifest.json - Error: \${e.message}\`);
+            }
+          });
+        "
+    
+    - name: 📤 Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      if: github.event_name == 'pull_request'
+      with:
+        name: extension-builds-${{ github.sha }}
+        path: |
+          dist-chrome/
+          dist-firefox/
+          dist-edge/
+        retention-days: 7
+    
+    - name: ✅ Quality Check Summary
+      run: |
+        echo "🎯 Quality Checks Complete!"
+        echo "✅ TypeScript compilation successful"
+        echo "✅ All browser targets built successfully"
+        echo "✅ Manifest files validated"

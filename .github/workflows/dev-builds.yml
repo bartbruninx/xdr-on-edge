@@ -1,0 +1,73 @@
+name: 🧪 Development Builds
+
+on:
+  workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly on Monday at 2 AM UTC
+
+jobs:
+  dev-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+    
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: 🔧 Install Dependencies
+      run: npm ci
+    
+    - name: 🔍 Dependency Check
+      run: |
+        echo "📊 Dependency Analysis:"
+        npm ls --depth=0
+        echo ""
+        echo "🔒 Security Vulnerabilities:"
+        npm audit --audit-level=low || true
+        echo ""
+        echo "📦 Outdated Packages:"
+        npm outdated || true
+    
+    - name: 🛠️ Build All Targets
+      run: npm run build:all
+    
+    - name: 📤 Upload Development Builds
+      uses: actions/upload-artifact@v4
+      with:
+        name: dev-builds-${{ github.run_number }}
+        path: |
+          dist-chrome/
+          dist-firefox/
+          dist-edge/
+        retention-days: 30
+    
+    - name: 📋 Generate Build Report
+      run: |
+        echo "# 📊 Development Build Report" > build-report.md
+        echo "" >> build-report.md
+        echo "**Build Date:** $(date)" >> build-report.md
+        echo "**Commit:** ${{ github.sha }}" >> build-report.md
+        echo "**Node.js:** $(node --version)" >> build-report.md
+        echo "**npm:** $(npm --version)" >> build-report.md
+        echo "" >> build-report.md
+        echo "## 📦 Build Sizes" >> build-report.md
+        echo "\`\`\`" >> build-report.md
+        du -h dist-*/assets/* | sort -hr >> build-report.md
+        echo "\`\`\`" >> build-report.md
+        echo "" >> build-report.md
+        echo "## 🔧 Package Info" >> build-report.md
+        echo "\`\`\`json" >> build-report.md
+        cat package.json | jq '{name, version, dependencies: (.dependencies | keys), devDependencies: (.devDependencies | keys)}' >> build-report.md
+        echo "\`\`\`" >> build-report.md
+    
+    - name: 📤 Upload Build Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-report-${{ github.run_number }}
+        path: build-report.md
+        retention-days: 90

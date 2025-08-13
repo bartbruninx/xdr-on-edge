@@ -26,6 +26,8 @@
     "copy-logo:edge": "cp public/logo.png dist-edge/",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
+    "lint": "svelte-check --tsconfig ./tsconfig.json",
+    "format": "prettier --write .",
     "package": "npm run build:all && node scripts/package.js"
   },
   "devDependencies": {

@@ -1,0 +1,106 @@
+name: 🚀 Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v1.0.0, v1.2.3, etc.
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+    
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: 🔧 Install Dependencies
+      run: npm ci
+    
+    - name: 🛠️ Build All Browser Targets
+      run: npm run build:all
+    
+    - name: 🗜️ Create Distribution Archives
+      run: |
+        # Create zip files for each browser
+        cd dist-chrome && zip -r ../xdr-on-edge-chrome-${{ github.ref_name }}.zip . && cd ..
+        cd dist-firefox && zip -r ../xdr-on-edge-firefox-${{ github.ref_name }}.zip . && cd ..
+        cd dist-edge && zip -r ../xdr-on-edge-edge-${{ github.ref_name }}.zip . && cd ..
+        
+        # Create combined source archive
+        zip -r xdr-on-edge-source-${{ github.ref_name }}.zip . \
+          -x "node_modules/*" "dist-*/*" ".git/*" "*.zip"
+    
+    - name: 🔍 Verify Build Artifacts
+      run: |
+        echo "📊 Build Summary:"
+        echo "Chrome build size: $(du -h xdr-on-edge-chrome-*.zip | cut -f1)"
+        echo "Firefox build size: $(du -h xdr-on-edge-firefox-*.zip | cut -f1)"
+        echo "Edge build size: $(du -h xdr-on-edge-edge-*.zip | cut -f1)"
+        echo "Source archive size: $(du -h xdr-on-edge-source-*.zip | cut -f1)"
+        
+        # Verify manifest files exist
+        unzip -l xdr-on-edge-chrome-*.zip | grep manifest.json
+        unzip -l xdr-on-edge-firefox-*.zip | grep manifest.json
+        unzip -l xdr-on-edge-edge-*.zip | grep manifest.json
+    
+    - name: 🔐 Generate Checksums
+      run: |
+        sha256sum xdr-on-edge-*.zip > checksums.txt
+        echo "📋 Checksums:"
+        cat checksums.txt
+    
+    - name: 📝 Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          xdr-on-edge-chrome-*.zip
+          xdr-on-edge-firefox-*.zip
+          xdr-on-edge-edge-*.zip
+          xdr-on-edge-source-*.zip
+          checksums.txt
+        body: |
+          ## 🛡️ XDR on Edge ${{ github.ref_name }}
+          
+          ### 📦 Downloads
+          - **🟡 Chrome**: `xdr-on-edge-chrome-${{ github.ref_name }}.zip`
+          - **🦊 Firefox**: `xdr-on-edge-firefox-${{ github.ref_name }}.zip`
+          - **🔷 Edge**: `xdr-on-edge-edge-${{ github.ref_name }}.zip`
+          - **📦 Source**: `xdr-on-edge-source-${{ github.ref_name }}.zip`
+          
+          ### 🔐 Security
+          - All builds are automatically generated from source code
+          - SHA256 checksums available in `checksums.txt`
+          - No manual modifications to build artifacts
+          
+          ### ⚙️ Installation
+          1. Download the appropriate browser package
+          2. Extract the archive
+          3. Follow README.md installation instructions
+          4. Configure with your Microsoft Entra ID credentials
+          
+          ### ⚠️ Requirements
+          - Microsoft Entra ID application registration
+          - Required permissions: `SecurityIncident.Read.All` (admin consent)
+          - Browser: Chrome 88+, Firefox 109+, or Edge 88+
+          
+          ---
+          **🔍 Verify Download Integrity**
+          ```bash
+          sha256sum -c checksums.txt
+          ```
+        generate_release_notes: true
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: ✅ Release Complete
+      run: |
+        echo "🎉 Release ${{ github.ref_name }} has been published!"
+        echo "📍 View at: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
