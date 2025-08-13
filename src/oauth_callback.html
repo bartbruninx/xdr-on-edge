@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>OAuth Callback</title>
+</head>
+<body>
+    <script>
+        // This page handles OAuth callback for Firefox
+        if (window.location.hash || window.location.search) {
+            // Close the window - the parent extension will handle the callback
+            window.close();
+        }
+    </script>
+</body>
+</html>

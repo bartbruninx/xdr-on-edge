@@ -1,0 +1,52 @@
+{
+  "name": "xdr-on-edge",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:chrome": "BUILD_TARGET=chrome npm run build && npm run copy-manifest:chrome && npm run copy-polyfill:chrome && npm run copy-options:chrome && npm run copy-logo:chrome",
+    "build:firefox": "BUILD_TARGET=firefox npm run build && npm run copy-manifest:firefox && npm run copy-polyfill:firefox && npm run copy-options:firefox && npm run copy-oauth-callback:firefox && npm run copy-logo:firefox",
+    "build:edge": "BUILD_TARGET=edge npm run build && npm run copy-manifest:edge && npm run copy-polyfill:edge && npm run copy-options:edge && npm run copy-logo:edge",
+    "build:cross-browser": "npm run build:chrome && npm run build:firefox && npm run build:edge",
+    "build:all": "npm run build:chrome && npm run build:firefox && npm run build:edge",
+    "copy-manifest:chrome": "cp manifests/manifest.chrome.json dist-chrome/manifest.json",
+    "copy-manifest:firefox": "cp manifests/manifest.firefox.json dist-firefox/manifest.json",
+    "copy-manifest:edge": "cp manifests/manifest.edge.json dist-edge/manifest.json",
+    "copy-polyfill:chrome": "cp node_modules/webextension-polyfill/dist/browser-polyfill.js dist-chrome/",
+    "copy-polyfill:firefox": "cp node_modules/webextension-polyfill/dist/browser-polyfill.js dist-firefox/",
+    "copy-polyfill:edge": "cp node_modules/webextension-polyfill/dist/browser-polyfill.js dist-edge/",
+    "copy-options:chrome": "cp src/options.html dist-chrome/",
+    "copy-options:firefox": "cp src/options.html dist-firefox/",
+    "copy-options:edge": "cp src/options.html dist-edge/",
+    "copy-oauth-callback:firefox": "cp src/oauth_callback.html dist-firefox/",
+    "copy-logo:chrome": "cp public/logo.png dist-chrome/",
+    "copy-logo:firefox": "cp public/logo.png dist-firefox/",
+    "copy-logo:edge": "cp public/logo.png dist-edge/",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "package": "npm run build:all && node scripts/package.js"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^6.0.0",
+    "@tailwindcss/forms": "^0.5.9",
+    "@tailwindcss/typography": "^0.5.15",
+    "@tailwindcss/vite": "^4.0.0",
+    "@tsconfig/svelte": "^5.0.4",
+    "@types/node": "^24.1.0",
+    "@types/webextension-polyfill": "^0.12.3",
+    "glob": "^11.0.3",
+    "svelte": "^5.35.5",
+    "svelte-check": "^4.2.2",
+    "tailwindcss": "^4.0.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4"
+  },
+  "dependencies": {
+    "bits-ui": "^2.8.13",
+    "compression-streams-polyfill": "^0.1.7",
+    "lucide-svelte": "^0.532.0",
+    "webextension-polyfill": "^0.12.0"
+  }
+}

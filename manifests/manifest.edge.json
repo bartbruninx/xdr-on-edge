@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "XDR on Edge",
+  "version": "1.0.0",
+  "description": "Microsoft Security Graph integration for browser",
+  
+  "permissions": [
+    "storage",
+    "activeTab",
+    "alarms",
+    "notifications",
+    "identity",
+    "scripting",
+    "tabs"
+  ],
+  
+  "host_permissions": [
+    "https://graph.microsoft.com/*",
+    "https://login.microsoftonline.com/*"
+  ],
+  
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "XDR on Edge",
+    "default_icon": {
+      "16": "logo.png",
+      "32": "logo.png",
+      "48": "logo.png",
+      "128": "logo.png"
+    }
+  },
+  
+  "options_page": "options.html",
+  
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  
+  "web_accessible_resources": []
+}

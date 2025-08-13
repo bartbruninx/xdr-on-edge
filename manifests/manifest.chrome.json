@@ -1,0 +1,51 @@
+{
+  "name": "XDR on Edge",
+  "description": "Secure Microsoft Security API access for threat hunting and incident response",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "action": {
+    "default_title": "XDR on Edge",
+    "default_icon": "logo.png",
+    "default_popup": "index.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "permissions": [
+    "storage",
+    "identity",
+    "notifications",
+    "alarms",
+    "activeTab",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://login.microsoftonline.com/*",
+    "https://graph.microsoft.com/*"
+  ],
+  "oauth2": {
+    "client_id": "YOUR_MICROSOFT_APP_CLIENT_ID",
+    "scopes": [
+      "https://graph.microsoft.com/SecurityIncident.Read.All",
+      "https://graph.microsoft.com/ThreatHunting.Read.All",
+      "openid",
+      "profile",
+      "offline_access"
+    ]
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["logo.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
