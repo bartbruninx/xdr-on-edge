@@ -2,8 +2,6 @@ name: 🧪 Development Builds
 
 on:
   workflow_dispatch:  # Manual trigger
-  schedule:
-    - cron: '0 2 * * 1'  # Weekly on Monday at 2 AM UTC
 
 jobs:
   dev-build:
