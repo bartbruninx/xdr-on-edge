@@ -6,12 +6,8 @@
 
 import type {
   SecurityIncident,
-  SecurityAlert,
-  AdvancedHuntingQuery,
-  AdvancedHuntingResult,
   ApiResponse,
   IncidentFilters,
-  AlertFilters,
   IncidentDashboardData,
   SecurityApiConfig,
   AuditLogEntry,
@@ -298,82 +294,6 @@ export class MicrosoftSecurityApiClient {
       'PATCH',
       endpoint,
       sanitizedUpdate
-    );
-  }
-
-  /**
-   * Get security alerts with optional filtering
-   */
-  async getAlerts(accessToken: string, filters?: AlertFilters): Promise<ApiResponse<SecurityAlert>> {
-    const endpoint = '/security/alerts_v2';
-    const queryParams = this.buildAlertQueryParams(filters);
-    
-    return await this.makeApiRequest<ApiResponse<SecurityAlert>>(
-      accessToken,
-      'GET',
-      endpoint,
-      undefined,
-      queryParams
-    );
-  }
-
-  /**
-   * Get a specific alert by ID
-   */
-  async getAlert(accessToken: string, alertId: string): Promise<SecurityAlert> {
-    const endpoint = `/security/alerts_v2/${encodeURIComponent(alertId)}`;
-    
-    return await this.makeApiRequest<SecurityAlert>(
-      accessToken,
-      'GET',
-      endpoint
-    );
-  }
-
-  /**
-   * Update an alert
-   */
-  async updateAlert(
-    accessToken: string, 
-    alertId: string, 
-    update: Partial<SecurityAlert>
-  ): Promise<SecurityAlert> {
-    const endpoint = `/security/alerts_v2/${encodeURIComponent(alertId)}`;
-    
-    // Sanitize update data to only include allowed fields
-    const allowedFields = ['status', 'assignedTo', 'classification', 'determination'];
-    const sanitizedUpdate = Object.keys(update)
-      .filter(key => allowedFields.includes(key))
-      .reduce((obj, key) => {
-        obj[key] = update[key as keyof SecurityAlert];
-        return obj;
-      }, {} as any);
-
-    return await this.makeApiRequest<SecurityAlert>(
-      accessToken,
-      'PATCH',
-      endpoint,
-      sanitizedUpdate
-    );
-  }
-
-  /**
-   * Run advanced hunting query
-   */
-  async runAdvancedHuntingQuery(
-    accessToken: string, 
-    query: AdvancedHuntingQuery
-  ): Promise<AdvancedHuntingResult> {
-    const endpoint = '/security/runHuntingQuery';
-    
-    // Validate and sanitize the query
-    const sanitizedQuery = this.sanitizeHuntingQuery(query);
-    
-    return await this.makeApiRequest<AdvancedHuntingResult>(
-      accessToken,
-      'POST',
-      endpoint,
-      sanitizedQuery
     );
   }
 
@@ -673,92 +593,6 @@ export class MicrosoftSecurityApiClient {
     }
     
     return params;
-  }
-
-  /**
-   * Build query parameters for alert filtering
-   */
-  private buildAlertQueryParams(filters?: AlertFilters): Record<string, string> {
-    const params: Record<string, string> = {};
-    
-    if (!filters) return params;
-    
-    // Add filters
-    if (filters.status?.length) {
-      params['$filter'] = `status in (${filters.status.map(s => `'${s}'`).join(',')})`;
-    }
-    
-    if (filters.severity?.length) {
-      const severityFilter = `severity in (${filters.severity.map(s => `'${s}'`).join(',')})`;
-      params['$filter'] = params['$filter'] ? `${params['$filter']} and ${severityFilter}` : severityFilter;
-    }
-    
-    if (filters.category?.length) {
-      const categoryFilter = `category in (${filters.category.map(c => `'${c}'`).join(',')})`;
-      params['$filter'] = params['$filter'] ? `${params['$filter']} and ${categoryFilter}` : categoryFilter;
-    }
-    
-    if (filters.assignedTo) {
-      const assignedFilter = `assignedTo eq '${filters.assignedTo}'`;
-      params['$filter'] = params['$filter'] ? `${params['$filter']} and ${assignedFilter}` : assignedFilter;
-    }
-    
-    // Add pagination
-    if (filters.$top) {
-      params['$top'] = filters.$top.toString();
-    }
-    
-    if (filters.$skip) {
-      params['$skip'] = filters.$skip.toString();
-    }
-    
-    if (filters.$orderby) {
-      params['$orderby'] = filters.$orderby;
-    }
-    
-    return params;
-  }
-
-  /**
-   * Sanitize and validate hunting query
-   */
-  private sanitizeHuntingQuery(query: AdvancedHuntingQuery): AdvancedHuntingQuery {
-    // Basic validation
-    if (!query.query || typeof query.query !== 'string') {
-      throw this.createError('VALIDATION_ERROR', 'Invalid query string');
-    }
-    
-    // Remove potentially dangerous operations
-    const dangerousPatterns = [
-      /\bexternaldata\b/i,
-      /\binvoke\b/i,
-      /\beval\b/i,
-      /\bexecute\b/i
-    ];
-    
-    for (const pattern of dangerousPatterns) {
-      if (pattern.test(query.query)) {
-        throw this.createError('VALIDATION_ERROR', 'Query contains potentially dangerous operations');
-      }
-    }
-    
-    // Limit query length
-    if (query.query.length > 10000) {
-      throw this.createError('VALIDATION_ERROR', 'Query is too long (max 10,000 characters)');
-    }
-    
-    // Validate timespan format if provided
-    if (query.timespan) {
-      const timespanRegex = /^P(\d+Y)?(\d+M)?(\d+D)?(T(\d+H)?(\d+M)?(\d+S)?)?$/;
-      if (!timespanRegex.test(query.timespan)) {
-        throw this.createError('VALIDATION_ERROR', 'Invalid timespan format (must be ISO 8601 duration)');
-      }
-    }
-    
-    return {
-      query: query.query.trim(),
-      timespan: query.timespan
-    };
   }
 
   /**

@@ -33,10 +33,7 @@ import {
   isValidSecurityMessage,
   handleAuthMessage,
   handleIncidentsMessage,
-  handleAlertsMessage,
-  handleHuntMessage,
   handleUpdateIncidentMessage,
-  handleUpdateAlertMessage,
   handleSettingsUpdatedMessage,
   handleStatusMessage,
   handleRefreshMessage
@@ -204,20 +201,8 @@ async function handleMessage(message: any, sender: any): Promise<MessageResponse
         response = await handleIncidentsMessage(message, oauthService, apiClient, logAuditEvent);
         break;
         
-      case 'MS_SECURITY_ALERTS':
-        response = await handleAlertsMessage(message, oauthService, apiClient, logAuditEvent);
-        break;
-        
-      case 'MS_SECURITY_HUNT':
-        response = await handleHuntMessage(message, oauthService, apiClient, logAuditEvent);
-        break;
-        
       case 'MS_SECURITY_UPDATE_INCIDENT':
         response = await handleUpdateIncidentMessage(message, oauthService, apiClient, logAuditEvent);
-        break;
-        
-      case 'MS_SECURITY_UPDATE_ALERT':
-        response = await handleUpdateAlertMessage(message, oauthService, apiClient, logAuditEvent);
         break;
         
       case 'SETTINGS_UPDATED':

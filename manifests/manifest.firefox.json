@@ -1,7 +1,7 @@
 {
   "name": "XDR on Edge",
   "description": "Secure Microsoft Security API access for threat hunting and incident response",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "manifest_version": 3,
   "action": {
     "default_title": "XDR on Edge",
@@ -27,7 +27,8 @@
   ],
   "host_permissions": [
     "https://login.microsoftonline.com/*",
-    "https://graph.microsoft.com/*"
+    "https://graph.microsoft.com/*",
+    "https://security.microsoft.com/*"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"

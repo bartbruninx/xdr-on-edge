@@ -9,11 +9,7 @@ import type {
   MessageResponse,
   AuthenticationState,
   SecurityIncident,
-  SecurityAlert,
-  AdvancedHuntingResult,
   IncidentFilters,
-  AlertFilters,
-  AdvancedHuntingQuery,
   ApiResponse
 } from '../types/security.d.ts';
 import { logger } from './audit-logger.js';
@@ -179,61 +175,8 @@ export class MicrosoftSecurityClient {
   // ============================================================================
 
   /**
-   * Get security alerts with optional filtering
-   */
-  async getAlerts(filters?: AlertFilters): Promise<MessageResponse<ApiResponse<SecurityAlert>>> {
-    const message: SecurityMessage = {
-      type: 'MS_SECURITY_ALERTS',
-      requestId: this.generateRequestId(),
-      timestamp: Date.now(),
-      data: {
-        filters
-      }
-    };
-
-    return await this.sendMessage<ApiResponse<SecurityAlert>>(message);
-  }
-
-  /**
-   * Update an alert
-   */
-  async updateAlert(alertId: string, update: Partial<SecurityAlert>): Promise<MessageResponse<SecurityAlert>> {
-    const message: SecurityMessage = {
-      type: 'MS_SECURITY_UPDATE_ALERT',
-      requestId: this.generateRequestId(),
-      timestamp: Date.now(),
-      data: {
-        alertId,
-        update
-      }
-    };
-
-    return await this.sendMessage<SecurityAlert>(message);
-  }
-
   // ============================================================================
   // Advanced Hunting
-  // ============================================================================
-
-  /**
-   * Run advanced hunting query
-   */
-  async runAdvancedHuntingQuery(query: string, timespan?: string): Promise<MessageResponse<AdvancedHuntingResult>> {
-    const huntingQuery: AdvancedHuntingQuery = {
-      query,
-      timespan
-    };
-
-    const message: SecurityMessage = {
-      type: 'MS_SECURITY_HUNT',
-      requestId: this.generateRequestId(),
-      timestamp: Date.now(),
-      data: huntingQuery
-    };
-
-    return await this.sendMessage<AdvancedHuntingResult>(message);
-  }
-
   // ============================================================================
   // System Status
   // ============================================================================
@@ -337,7 +280,7 @@ export class MicrosoftSecurityClient {
   /**
    * Create human-readable filters description
    */
-  getFiltersDescription(filters: IncidentFilters | AlertFilters | undefined): string {
+  getFiltersDescription(filters: IncidentFilters | undefined): string {
     if (!filters) {
       return 'All items';
     }
@@ -354,10 +297,6 @@ export class MicrosoftSecurityClient {
 
     if (filters.assignedTo) {
       parts.push(`Assigned to: ${filters.assignedTo}`);
-    }
-
-    if ('category' in filters && filters.category?.length) {
-      parts.push(`Category: ${filters.category.join(', ')}`);
     }
 
     if (filters.$top) {

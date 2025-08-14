@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "XDR on Edge",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Microsoft Security Graph integration for browser",
   
   "permissions": [
@@ -16,7 +16,8 @@
   
   "host_permissions": [
     "https://graph.microsoft.com/*",
-    "https://login.microsoftonline.com/*"
+    "https://login.microsoftonline.com/*",
+    "https://security.microsoft.com/*"
   ],
   
   "background": {

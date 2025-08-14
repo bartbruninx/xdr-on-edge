@@ -11,8 +11,8 @@
   import browser from 'webextension-polyfill';
   import { getDefaultSettings, mergeWithDefaults, type SettingsSchema, type IOCTemplateCollection } from '../default-settings.js';
   import type { IOCResults } from '../ioc-scanner.js';
-  // Import compression streams ponyfill for browser extension compatibility
-  import { makeCompressionStream } from 'compression-streams-polyfill/ponyfill';
+  // Import pako for gzip compression (no workers needed)
+  import * as pako from 'pako';
 
   // Props - IOCs can be passed in from IOC Management page
   let { 
@@ -380,44 +380,10 @@
         utf16Bytes[i * 2 + 1] = (charCode >> 8) & 0xFF; // High byte (usually 0 for ASCII)
       }
       
-      // STEP 3: Gzip compression using ponyfill (matching our decoder)
-      const CompressionStreamClass = makeCompressionStream(TransformStream);
-      const compressionStream = new CompressionStreamClass('gzip');
+      // STEP 3: Gzip compression using pako (synchronous, no workers needed)
+      const compressedData = pako.gzip(utf16Bytes);
       
-      const writer = compressionStream.writable.getWriter();
-      const reader = compressionStream.readable.getReader();
-      
-      // Collect compressed chunks
-      const compressedChunks: Uint8Array[] = [];
-      const readPromise = (async () => {
-        try {
-          while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-            if (value) {
-              compressedChunks.push(value);
-            }
-          }
-        } catch (err) {
-          logger.error('Error reading compressed chunks', { error: err instanceof Error ? err.message : 'Unknown error' });
-        }
-      })();
-      
-      // Write UTF-16-like data and close
-      await writer.write(utf16Bytes);
-      await writer.close();
-      await readPromise;
-      
-      // STEP 4: Combine chunks into single array
-      const totalCompressedLength = compressedChunks.reduce((acc, chunk) => acc + chunk.length, 0);
-      const compressedData = new Uint8Array(totalCompressedLength);
-      let offset = 0;
-      for (const chunk of compressedChunks) {
-        compressedData.set(chunk, offset);
-        offset += chunk.length;
-      }
-      
-      // STEP 5: Convert to Base64 using the working example approach
+      // STEP 4: Convert to Base64 using the working example approach
       let standardBase64: string;
       try {
         // Use proper binary string conversion (safer for large data)
@@ -443,7 +409,7 @@
         }
       }
       
-      // STEP 6: Convert to URL-safe Base64 (exactly like the working example)
+      // STEP 5: Convert to URL-safe Base64 (exactly like the working example)
       const urlSafeBase64 = standardBase64
         .replace(/\+/g, '-')    // + becomes -
         .replace(/\//g, '_')    // / becomes _
@@ -509,7 +475,10 @@
       const huntingUrl = `https://security.microsoft.com/hunting?timeRangeId=month&query=${uriEncodedQuery}&runQuery=true&tid=&goHunt=1`;
       
       // Open in new tab
-      await browser.tabs.create({ url: huntingUrl });
+      await browser.tabs.create({
+        url: huntingUrl,
+        active: true
+      });
       
       logger.debug('Executed threat hunt', { 
         selectedTemplates: getTotalTemplateCount(),

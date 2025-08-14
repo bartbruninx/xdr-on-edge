@@ -111,151 +111,11 @@ export interface SecurityIncident {
   createdDateTime: string;
   lastUpdateDateTime: string;
   redirectIncidentId?: string;
-  alerts: SecurityAlert[];
   customTags?: string[]; // Changed from tags to customTags to match API
   systemTags?: string[]; // Added systemTags
   summary?: string; // Added summary
   incidentWebUrl?: string; // Added incident web URL
   tenantId?: string; // Added tenantId
-}
-
-export interface SecurityAlert {
-  id: string;
-  alertDisplayName: string;
-  title: string;
-  description?: string;
-  category: string;
-  severity: 'informational' | 'low' | 'medium' | 'high';
-  status: 'new' | 'inProgress' | 'resolved';
-  investigationId?: string;
-  investigationState?: 'unknown' | 'terminated' | 'successfullyRemediated' | 'benign' | 'failed';
-  classification?: 'unknown' | 'falsePositive' | 'truePositive';
-  determination?: string;
-  assignedTo?: string;
-  actorDisplayName?: string;
-  threatDisplayName?: string;
-  threatFamilyName?: string;
-  mitreTechniques: string[];
-  createdDateTime: string;
-  lastUpdateDateTime: string;
-  resolvedDateTime?: string;
-  firstActivity?: string;
-  lastActivity?: string;
-  comments: AlertComment[];
-  evidence: AlertEvidence[];
-  detectorId: string;
-  tenantId: string;
-}
-
-export interface AlertComment {
-  comment: string;
-  createdBy: string;
-  createdDateTime: string;
-}
-
-export interface AlertEvidence {
-  '@odata.type': string;
-  createdDateTime: string;
-  verdict: 'unknown' | 'suspicious' | 'malicious' | 'noThreatsFound';
-  remediationStatus: 'none' | 'notFound' | 'unknown' | 'remediated' | 'blocked' | 'notRemediated';
-  remediationStatusDetails?: string;
-  roles: string[];
-  tags: string[];
-  firstSeenDateTime?: string;
-  mdeDeviceId?: string;
-  azureAdDeviceId?: string;
-  deviceDnsName?: string;
-  osPlatform?: string;
-  osVersion?: string;
-  parentProcessImageFile?: ProcessImageFile;
-  parentProcessCommandLine?: string;
-  parentProcessCreationDateTime?: string;
-  parentProcessId?: number;
-  processImageFile?: ProcessImageFile;
-  processCommandLine?: string;
-  processCreationDateTime?: string;
-  processId?: number;
-  userAccount?: UserAccount;
-  registryKey?: string;
-  registryHive?: string;
-  registryValueType?: string;
-  registryValueName?: string;
-  registryValueData?: string;
-  url?: string;
-  fileDetails?: FileDetails;
-  ipAddress?: string;
-  countryLetterCode?: string;
-  networkMessageId?: string;
-  emailSubject?: string;
-  applicationId?: string;
-  oauthApplicationId?: string;
-}
-
-export interface ProcessImageFile {
-  fileName?: string;
-  filePath?: string;
-  fileSize?: number;
-  filePublisher?: string;
-  fileProductName?: string;
-  fileVersion?: string;
-  issuer?: string;
-  signer?: string;
-}
-
-export interface UserAccount {
-  accountName?: string;
-  domainName?: string;
-  userSid?: string;
-  azureAdUserId?: string;
-  userPrincipalName?: string;
-  displayName?: string;
-}
-
-export interface FileDetails {
-  fileName?: string;
-  filePath?: string;
-  fileSize?: number;
-  filePublisher?: string;
-  fileProductName?: string;
-  fileVersion?: string;
-  issuer?: string;
-  signer?: string;
-  sha1?: string;
-  sha256?: string;
-}
-
-export interface AdvancedHuntingQuery {
-  query: string;
-  timespan?: string; // ISO 8601 duration format (e.g., 'P7D' for 7 days)
-}
-
-export interface AdvancedHuntingResult {
-  schema: AdvancedHuntingSchema[];
-  results: Record<string, any>[];
-  stats?: {
-    executionTime: number;
-    resourceConsumption: {
-      cache: {
-        memory: number;
-        disk: number;
-      };
-      cpu: {
-        user: number;
-        kernel: number;
-        total: number;
-      };
-    };
-    datasetStatistics: Array<{
-      tableName: string;
-      rowCount: number;
-      size: number;
-    }>;
-  };
-}
-
-export interface AdvancedHuntingSchema {
-  name: string;
-  type: string;
 }
 
 // ============================================================================
@@ -308,26 +168,6 @@ export interface OptimizedIncidentFilters extends IncidentFilters {
   preset?: 'dashboard' | 'assigned' | 'severity-counts' | 'recent';
 }
 
-export interface AlertFilters {
-  status?: ('new' | 'inProgress' | 'resolved')[];
-  severity?: ('informational' | 'low' | 'medium' | 'high')[];
-  category?: string[];
-  assignedTo?: string;
-  classification?: ('unknown' | 'falsePositive' | 'truePositive')[];
-  createdDateTime?: {
-    start?: string;
-    end?: string;
-  };
-  lastUpdateDateTime?: {
-    start?: string;
-    end?: string;
-  };
-  $top?: number;
-  $skip?: number;
-  $orderby?: string;
-  $count?: boolean;
-}
-
 export interface TimeRange {
   start: string; // ISO 8601 format
   end: string;   // ISO 8601 format
@@ -377,18 +217,6 @@ export interface IncidentsMessage extends BaseMessage {
   };
 }
 
-export interface AlertsMessage extends BaseMessage {
-  type: 'MS_SECURITY_ALERTS';
-  data: {
-    filters?: AlertFilters;
-  };
-}
-
-export interface HuntMessage extends BaseMessage {
-  type: 'MS_SECURITY_HUNT';
-  data: AdvancedHuntingQuery;
-}
-
 export interface StatusMessage extends BaseMessage {
   type: 'MS_SECURITY_STATUS';
   data: {
@@ -403,15 +231,6 @@ export interface UpdateIncidentMessage extends BaseMessage {
     update: Partial<SecurityIncident>;
   };
 }
-
-export interface UpdateAlertMessage extends BaseMessage {
-  type: 'MS_SECURITY_UPDATE_ALERT';
-  data: {
-    alertId: string;
-    update: Partial<SecurityAlert>;
-  };
-}
-
 export interface SettingsMessage extends BaseMessage {
   type: 'SETTINGS_UPDATED';
   data: ExtensionSettings;
@@ -432,11 +251,8 @@ export interface IOCMessage extends BaseMessage {
 export type SecurityMessage = 
   | AuthMessage
   | IncidentsMessage
-  | AlertsMessage
-  | HuntMessage
   | StatusMessage
   | UpdateIncidentMessage
-  | UpdateAlertMessage
   | SettingsMessage
   | RefreshMessage
   | IOCMessage;
