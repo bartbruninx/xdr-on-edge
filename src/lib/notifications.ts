@@ -351,6 +351,39 @@ export async function createInformationalSeverityNotification(newInformationalSe
 // ============================================================================
 
 /**
+ * Create a security alert notification for critical security events
+ */
+export async function createSecurityAlertNotification(
+  title: string,
+  message: string,
+  priority: 0 | 1 | 2 = 2
+): Promise<string | null> {
+  try {
+    logger.debug('Creating security alert notification', { title, message, priority });
+    
+    // Security alerts should always be shown regardless of user settings
+    const notificationId = await createStandardNotification(
+      title,
+      message,
+      { priority }
+    );
+    
+    if (notificationId) {
+      logger.info('Security alert notification created', { 
+        notificationId, 
+        title: title.substring(0, 50) + (title.length > 50 ? '...' : '') 
+      });
+    }
+    
+    return notificationId;
+    
+  } catch (error) {
+    logger.error('Failed to create security alert notification', { error, title, message });
+    return null;
+  }
+}
+
+/**
  * Show notification for new assignments in background context
  */
 export async function showBackgroundNotification(

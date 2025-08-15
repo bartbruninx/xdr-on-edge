@@ -11,7 +11,7 @@ import type { Browser } from 'webextension-polyfill';
 
 export interface OAuthConfig {
   clientId: string;
-  tenantId?: string; // 'common' for multi-tenant, specific tenant ID, or 'organizations'
+  tenantId: string; // REQUIRED: Must be a specific tenant GUID - multi-tenant authentication disabled for security
   scopes: string[];
   redirectUri: string;
 }
@@ -284,6 +284,7 @@ export type ErrorCode =
   | 'AUTH_REQUIRED'
   | 'AUTH_FAILED'
   | 'TOKEN_EXPIRED'
+  | 'TENANT_MISMATCH'
   | 'INSUFFICIENT_SCOPE'
   | 'RATE_LIMITED'
   | 'API_ERROR'

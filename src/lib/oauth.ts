@@ -15,6 +15,7 @@ import type {
 } from '../types/security.d.ts';
 import { encryptionService, EncryptionService } from './encryption.js';
 import { logger } from './audit-logger.js';
+import { createSecurityAlertNotification } from './notifications.js';
 
 export class OAuthService {
   private config: OAuthConfig;
@@ -22,8 +23,27 @@ export class OAuthService {
   private currentPKCE: PKCEParams | null = null;
 
   constructor(config: OAuthConfig) {
+    // SECURITY: Validate single-tenant configuration on construction
+    if (!config.tenantId || 
+        config.tenantId === 'common' || 
+        config.tenantId === 'organizations' || 
+        config.tenantId === 'consumers') {
+      throw new Error('Single-tenant authentication required: Multi-tenant configurations are disabled for security. Please configure a specific tenant GUID.');
+    }
+    
+    // Validate tenant ID is a proper GUID format
+    const tenantIdGuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!tenantIdGuidRegex.test(config.tenantId)) {
+      throw new Error('Invalid tenant ID format: Must be a valid GUID.');
+    }
+    
     this.config = config;
     this.browserCapabilities = this.detectBrowserCapabilities();
+    
+    logger.info('OAuth service initialized with validated single-tenant configuration', {
+      tenantId: config.tenantId,
+      clientId: config.clientId.substring(0, 8) + '...' // Log partial client ID for debugging
+    });
   }
 
   /**
@@ -673,13 +693,78 @@ export class OAuthService {
       if (tokens.idToken) {
         try {
           const payload = this.parseJWT(tokens.idToken);
+          
+          // SECURITY: Enforce single-tenant only authentication
+          const receivedTenantId = payload.tid;
+          if (!receivedTenantId) {
+            logger.error('No tenant ID found in ID token - invalid authentication response');
+            await this.clearStoredTokens();
+            throw this.createError('TENANT_MISMATCH', 'Authentication failed: No tenant ID in response');
+          }
+
+          // Reject multi-tenant configurations entirely
+          if (!this.config.tenantId || this.config.tenantId === 'common' || this.config.tenantId === 'organizations') {
+            const errorMessage = 'Authentication failed: Multi-tenant authentication is not permitted for security reasons. Please configure a specific tenant ID.';
+            
+            logger.error('Invalid tenant configuration - multi-tenant authentication blocked', {
+              configuredTenantId: this.config.tenantId || 'undefined'
+            });
+            
+            try {
+              await createSecurityAlertNotification(
+                'Security Error: Invalid Configuration',
+                'Multi-tenant authentication is disabled for security. Please contact your administrator to configure a specific tenant ID.',
+                2 // High priority
+              );
+            } catch (notificationError) {
+              logger.error('Failed to show configuration error notification', notificationError);
+            }
+            
+            await this.clearStoredTokens();
+            throw this.createError('TENANT_MISMATCH', errorMessage);
+          }
+
+          // Validate against configured single tenant
+          if (receivedTenantId !== this.config.tenantId) {
+            const errorMessage = `Authentication failed: User authenticated from unauthorized tenant '${receivedTenantId}'. Expected tenant: '${this.config.tenantId}'.`;
+            
+            logger.error('Tenant ID mismatch detected - unauthorized tenant access attempt', {
+              expected: this.config.tenantId,
+              received: receivedTenantId,
+              userPrincipalName: payload.preferred_username || payload.upn || 'unknown'
+            });
+            
+            try {
+              await createSecurityAlertNotification(
+                'Security Alert: Unauthorized Tenant Access',
+                `Authentication blocked from unauthorized tenant. Expected: ${this.config.tenantId}, Received: ${receivedTenantId}`,
+                2 // High priority
+              );
+            } catch (notificationError) {
+              logger.error('Failed to show security alert notification', notificationError);
+            }
+            
+            await this.clearStoredTokens();
+            throw this.createError('TENANT_MISMATCH', errorMessage);
+          }
+          
+          logger.info('Single-tenant authentication validation successful', {
+            tenantId: receivedTenantId,
+            userPrincipalName: payload.preferred_username || payload.upn || 'unknown'
+          });
+          
           userInfo = {
             id: payload.oid || payload.sub || 'unknown',
             displayName: payload.name || 'Unknown User',
             userPrincipalName: payload.preferred_username || payload.upn || 'unknown@unknown.com',
-            tenantId: payload.tid || 'unknown'
+            tenantId: receivedTenantId || 'unknown'
           };
         } catch (error) {
+          // Re-throw our custom security errors
+          if (error instanceof Error && 'code' in error && (error as any).code === 'TENANT_MISMATCH') {
+            throw error;
+          }
+          
           logger.warn('Failed to parse ID token:', { error: error instanceof Error ? error.message : String(error) });
         }
       }
@@ -692,6 +777,11 @@ export class OAuthService {
       };
       
     } catch (error) {
+      // Re-throw our custom security errors
+      if (error instanceof Error && 'code' in error && (error as any).code === 'TENANT_MISMATCH') {
+        throw error;
+      }
+      
       logger.error('Failed to build authentication state:', error);
       return {
         isAuthenticated: false,

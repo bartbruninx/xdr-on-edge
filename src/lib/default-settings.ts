@@ -53,7 +53,7 @@ export interface SettingsSchema {
 export const DEFAULT_SETTINGS: SettingsSchema = {
   oauth: {
     clientId: '',
-    tenantId: 'common',
+    tenantId: '',
     customScopes: []
   },
   api: {

@@ -113,9 +113,35 @@ async function initializeServices(): Promise<void> {
     await encryptionService.generateSessionKey();
     logger.debug('Encryption service initialized');
     
+    // SECURITY: Validate tenant configuration before initializing OAuth service
+    if (!EXTENSION_CONFIG.oauth.tenantId || 
+        EXTENSION_CONFIG.oauth.tenantId === 'common' || 
+        EXTENSION_CONFIG.oauth.tenantId === 'organizations' || 
+        EXTENSION_CONFIG.oauth.tenantId === 'consumers') {
+      const errorMessage = 'Invalid OAuth configuration: Single-tenant authentication required. Please configure a specific tenant GUID.';
+      logger.error(errorMessage, { 
+        configuredTenantId: EXTENSION_CONFIG.oauth.tenantId || 'undefined' 
+      });
+      throw new Error(errorMessage);
+    }
+    
+    // Validate tenant ID is a proper GUID format
+    const tenantIdGuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!tenantIdGuidRegex.test(EXTENSION_CONFIG.oauth.tenantId)) {
+      const errorMessage = 'Invalid OAuth configuration: Tenant ID must be a valid GUID format.';
+      logger.error(errorMessage, { 
+        configuredTenantId: EXTENSION_CONFIG.oauth.tenantId 
+      });
+      throw new Error(errorMessage);
+    }
+    
+    logger.info('Single-tenant configuration validated', { 
+      tenantId: EXTENSION_CONFIG.oauth.tenantId 
+    });
+
     // Initialize OAuth service
     oauthService = new OAuthService(EXTENSION_CONFIG.oauth);
-    logger.debug('OAuth service initialized');
+    logger.debug('OAuth service initialized with single-tenant configuration');
     
     // Initialize API client
     apiClient = new MicrosoftSecurityApiClient(EXTENSION_CONFIG.api);

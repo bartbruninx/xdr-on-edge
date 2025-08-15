@@ -18,7 +18,7 @@ import { logger } from './audit-logger.js';
 export const DEFAULT_EXTENSION_CONFIG: ExtensionConfig = {
   oauth: {
     clientId: 'YOUR_MICROSOFT_APP_CLIENT_ID', // Replace with your actual client ID
-    tenantId: 'common', // 'common' for multi-tenant, or specific tenant ID
+    tenantId: '', // REQUIRED: Must be a specific tenant GUID - multi-tenant authentication disabled for security
     redirectUri: '', // Will be set dynamically based on browser
     scopes: [
       'https://graph.microsoft.com/SecurityIncident.Read.All',
@@ -63,7 +63,7 @@ export const DEFAULT_EXTENSION_CONFIG: ExtensionConfig = {
 export const DEFAULT_XDR_SETTINGS: ExtensionSettings = {
   oauth: {
     clientId: '',
-    tenantId: 'common',
+    tenantId: '', // REQUIRED: Must be a specific tenant GUID for security
     customScopes: []
   },
   api: {
@@ -222,6 +222,32 @@ export class SettingsManager {
         if (settings.oauth.tenantId && typeof settings.oauth.tenantId !== 'string') {
           return false;
         }
+        
+        // SECURITY: Enhanced tenant ID validation - single-tenant only
+        if (settings.oauth.tenantId) {
+          const tenantId = settings.oauth.tenantId;
+          
+          // Reject multi-tenant configurations entirely
+          if (tenantId === 'common' || tenantId === 'organizations' || tenantId === 'consumers') {
+            logger.error('Multi-tenant configuration rejected for security', { tenantId });
+            return false;
+          }
+          
+          // Validate tenant ID is a proper GUID format
+          const isValidGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantId);
+          
+          if (!isValidGuid) {
+            logger.error('Invalid tenant ID format - must be a valid GUID', { tenantId });
+            return false;
+          }
+          
+          logger.info('Single-tenant configuration validated', { tenantId });
+        } else {
+          // Require tenant ID to be configured
+          logger.error('Tenant ID is required for security - multi-tenant authentication is disabled');
+          return false;
+        }
+        
         if (settings.oauth.customScopes && !Array.isArray(settings.oauth.customScopes)) {
           return false;
         }
