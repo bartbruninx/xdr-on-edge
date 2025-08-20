@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [ main ]
 
+# Security: Explicitly define minimal permissions required
+permissions:
+  contents: read          # Read repository contents
+  pull-requests: read     # Read pull request information
+  security-events: write  # Write security events (for CodeQL)
+  actions: read          # Read workflow run information
+
 jobs:
   quality-checks:
     runs-on: ubuntu-latest

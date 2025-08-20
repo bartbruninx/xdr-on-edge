@@ -3,6 +3,11 @@ name: 🧪 Development Builds
 on:
   workflow_dispatch:  # Manual trigger
 
+# Security: Explicitly define minimal permissions required
+permissions:
+  contents: read     # Read repository contents
+  actions: read     # Read workflow run information
+
 jobs:
   dev-build:
     runs-on: ubuntu-latest

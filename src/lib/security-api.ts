@@ -88,7 +88,7 @@ export class MicrosoftSecurityApiClient {
     // Temporarily get all active incidents and filter client-side to debug the 400 error
     const filters: IncidentFilters = {
       // assignedTo: userEmail, // Temporarily commented out to debug 400 error
-      status: ['active'],
+      status: ['active', 'inProgress'], // Include both active and in-progress incidents
       $select: 'id,displayName,severity,status,assignedTo,createdDateTime,lastUpdateDateTime,classification,determination',
       $orderby: 'lastUpdateDateTime desc',
       $top: 50 // Maximum allowed by Microsoft Graph API
@@ -126,7 +126,7 @@ export class MicrosoftSecurityApiClient {
     informational: ApiResponse<SecurityIncident>;
   }> {
     const baseFilters: IncidentFilters = {
-      status: ['active'],
+      status: ['active', 'inProgress'], // Include both active and in-progress incidents
       $select: 'id,displayName,severity,status,assignedTo,createdDateTime',
       $count: true,
       $top: 10
@@ -175,26 +175,26 @@ export class MicrosoftSecurityApiClient {
       assignedTo: userEmail
     }) : null;
 
-    // Severity queries (separate from others to avoid indexing confusion)
+    // Severity queries - include both active and in-progress incidents
     const severityQueries = await Promise.all([
       this.getIncidents(accessToken, {
         ...baseCountFilter,
-        status: ['active'],
+        status: ['active', 'inProgress'], // Include both statuses
         severity: ['high']
       }),
       this.getIncidents(accessToken, {
         ...baseCountFilter,
-        status: ['active'],
+        status: ['active', 'inProgress'], // Include both statuses
         severity: ['medium']
       }),
       this.getIncidents(accessToken, {
         ...baseCountFilter,
-        status: ['active'],
+        status: ['active', 'inProgress'], // Include both statuses
         severity: ['low']
       }),
       this.getIncidents(accessToken, {
         ...baseCountFilter,
-        status: ['active'],
+        status: ['active', 'inProgress'], // Include both statuses
         severity: ['informational']
       })
     ]);

@@ -1,7 +1,7 @@
 {
   "name": "XDR on Edge",
   "description": "Secure Microsoft Security API access for threat hunting and incident response",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "manifest_version": 3,
   "action": {
     "default_title": "XDR on Edge",

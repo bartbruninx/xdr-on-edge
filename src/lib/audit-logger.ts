@@ -22,7 +22,30 @@ class AuditLogStorage {
   private sessionId: string;
 
   constructor() {
-    this.sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.sessionId = this.generateSecureSessionId();
+  }
+
+  /**
+   * Generate a cryptographically secure session ID
+   */
+  private generateSecureSessionId(): string {
+    try {
+      // Use crypto.getRandomValues() for cryptographically secure randomness
+      const array = new Uint8Array(16);
+      crypto.getRandomValues(array);
+      
+      // Convert to hex string
+      const hexString = Array.from(array)
+        .map(byte => byte.toString(16).padStart(2, '0'))
+        .join('');
+      
+      return `session_${Date.now()}_${hexString}`;
+    } catch (error) {
+      // Fallback for environments where crypto.getRandomValues is not available
+      // This should not happen in modern browsers, but provides a safe fallback
+      console.warn('crypto.getRandomValues not available, using timestamp-based fallback');
+      return `session_${Date.now()}_${performance.now().toString(36).replace('.', '')}`;
+    }
   }
 
   /**
