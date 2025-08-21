@@ -104,7 +104,7 @@ Copy the **Application (client) ID** and **Directory (tenant) ID** from the Over
 ### 4. Configure Extension
 1. Click extension icon in browser toolbar
 2. Go to Settings (gear icon)
-3. Enter your **Client ID** and **Tenant ID** (or "common")
+3. Enter your **Client ID** and **Tenant ID**
 4. Save and return to dashboard
 5. Click **Sign In** to authenticate
 
