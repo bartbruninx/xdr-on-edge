@@ -50,8 +50,6 @@ A cross-browser extension that brings Microsoft Security capabilities to your br
 
 ## 🚀 Quick Start
 
-> **💡 Tip**: You can download pre-built extensions from [Releases](https://github.com/bartbruninx/xdr-on-edge/releases) instead of building from source!
-
 ### Option A: Download Release (Recommended)
 1. Visit [GitHub Releases](https://github.com/bartbruninx/xdr-on-edge/releases)
 2. Download the appropriate browser package:
@@ -66,14 +64,20 @@ A cross-browser extension that brings Microsoft Security capabilities to your br
 git clone <repository-url>
 cd xdr-on-edge
 npm install
+# Build for All browsers
+npm run build:all
+# OR Build for individual target
+npm run build:chrome
+npm run build:firefox  
+npm run build:edge
 ```
 
 ### 2. Microsoft Entra ID Configuration
 
 #### Create App Registration
 1. Go to [Azure Portal](https://portal.azure.com/) → **Entra ID** → **App registrations** → **New registration**
-2. Set name: `XDR on Edge`
-3. Choose account types for your organization
+2. Set name: `XDR on Edge` or choose your own
+3. Choose Single Tenant account type
 
 #### Add API Permissions
 Go to **API permissions** → **Add permission** → **Microsoft Graph** → **Delegated**:
@@ -83,8 +87,6 @@ Go to **API permissions** → **Add permission** → **Microsoft Graph** → **D
 - `User.Read` - Sign in and read user profile
 - `SecurityIncident.Read.All` - Read incidents (requires admin consent)
 
-Grant admin consent if you have permissions.
-
 #### Configure Authentication
 1. **Authentication** → **Add platform** → **Single-page application**
 2. Add redirect URIs (get the actual URI from the extension's Options page > Extension info > OAUTH > Redirect URI). 
@@ -93,15 +95,6 @@ Grant admin consent if you have permissions.
 Copy the **Application (client) ID** and **Directory (tenant) ID** from the Overview page.
 
 ### 3. Build & Install
-
-#### Build Extension (Skip if using downloaded release)
-```bash
-npm run build:all    # All browsers
-# OR individually:
-npm run build:chrome
-npm run build:firefox  
-npm run build:edge
-```
 
 #### Install in Browser
 - **Chrome**: `chrome://extensions/` → Enable Developer mode → Load unpacked → Select `dist-chrome/` (or extracted release folder)
@@ -114,15 +107,6 @@ npm run build:edge
 3. Enter your **Client ID** and **Tenant ID** (or "common")
 4. Save and return to dashboard
 5. Click **Sign In** to authenticate
-
-## 🔧 Development
-
-```bash
-npm run dev          # Development server
-npm run build:all    # Build all browser targets
-npm run lint         # ESLint check
-npm run format       # Prettier formatting
-```
 
 ## 📄 License
 
